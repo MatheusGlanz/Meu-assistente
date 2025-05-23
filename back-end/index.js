@@ -301,5 +301,16 @@ app.delete('/api/pagamentoscorolla/:id', async (req, res) => {
   }
 });
 
+const path = require('path');
+
+// Serve os arquivos estáticos do frontend
+app.use(express.static(path.join(__dirname, '../front-end/dist')));
+
+// Rota fallback para o React
+app.get('*', (req, res) => {
+  res.sendFile(path.resolve(__dirname, '../front-end', 'dist', 'index.html'));
+});
+
+
 // Iniciar servidor
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
