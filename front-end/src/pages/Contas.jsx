@@ -82,6 +82,41 @@ function Contas() {
 
   return (
     <div>
+      {/* CSS embutido para inputs number com estilo dark e ícones invertidos */}
+      <style>{`
+        input[type="number"] {
+          color: #fff;
+          background-color: #1e1e1e;
+          border: 1px solid #333;
+          border-radius: 8px;
+          padding: 0.5rem;
+          font-family: sans-serif;
+          width: 100%;
+          box-sizing: border-box;
+        }
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+          filter: invert(1);
+          cursor: pointer;
+        }
+        input[type="number"]::-moz-inner-spin-button,
+        input[type="number"]::-moz-outer-spin-button {
+          filter: invert(1);
+          cursor: pointer;
+        }
+        /* Estilo para filtro mês/ano */
+        .inputFiltro {
+          color: #fff !important;
+          background-color: #1e1e1e !important;
+          border: 1px solid #333;
+          border-radius: 8px;
+          padding: 0.5rem;
+          font-family: sans-serif;
+          width: 100%;
+          box-sizing: border-box;
+        }
+      `}</style>
+
       <h2>Contas Domésticas</h2>
 
       <Cartao>
@@ -127,14 +162,14 @@ function Contas() {
             placeholder="Mês (1-12)"
             value={filtroMes}
             onChange={e => setFiltroMes(e.target.value)}
-            style={estilos.input}
+            className="inputFiltro"
           />
           <input
             type="number"
             placeholder="Ano (ex: 2025)"
             value={filtroAno}
             onChange={e => setFiltroAno(e.target.value)}
-            style={estilos.input}
+            className="inputFiltro"
           />
         </div>
       </Cartao>

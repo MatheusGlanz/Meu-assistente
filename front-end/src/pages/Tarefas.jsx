@@ -64,6 +64,29 @@ function Tarefas() {
 
   return (
     <div>
+      {/* CSS embutido para inputs date e time com texto branco e ícones invertidos */}
+      <style>{`
+        input[type="date"],
+        input[type="time"] {
+          color: #fff;
+          background-color: #1e1e1e;
+          border: 1px solid #333;
+          border-radius: 8px;
+          padding: 0.5rem;
+          font-family: sans-serif;
+        }
+        input[type="date"]::-webkit-calendar-picker-indicator,
+        input[type="time"]::-webkit-calendar-picker-indicator {
+          filter: invert(1);
+          cursor: pointer;
+        }
+        input[type="date"]::-moz-calendar-picker-indicator,
+        input[type="time"]::-moz-calendar-picker-indicator {
+          filter: invert(1);
+          cursor: pointer;
+        }
+      `}</style>
+
       <h2>Minhas Tarefas</h2>
       <Cartao>
         <div style={estilos.formulario}>

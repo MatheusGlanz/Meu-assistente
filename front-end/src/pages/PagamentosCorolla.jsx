@@ -91,7 +91,7 @@ function PagamentosCorolla() {
             onChange={e => setData(e.target.value)}
             style={estilos.input}
           />
-        
+
           <Botao onClick={adicionarPagamento}>Adicionar Pagamento</Botao>
         </div>
       </Cartao>
@@ -107,16 +107,19 @@ function PagamentosCorolla() {
         </div>
         <h3>Total: R$ {total.toFixed(2)}</h3>
         <ul style={{ paddingLeft: '1rem' }}>
-          {pagamentos.map(p => (
-            <li key={p._id} style={{ marginBottom: '0.5rem' }}>
-              {new Date(p.data).toLocaleDateString()} — R$ {p.valor.toFixed(2)} — {p.status}
-              <br />
-              <Botao onClick={() => alterarStatus(p._id, p.status)}>
-                {p.status === 'Pago' ? 'Marcar como Pendente' : 'Marcar como Pago'}
-              </Botao>{' '}
-              <Botao tipo="perigo" onClick={() => remover(p._id)}>Remover</Botao>
-            </li>
-          ))}
+          {pagamentos
+            .slice()
+            .sort((a, b) => new Date(a.data) - new Date(b.data))
+            .map(p => (
+              <li key={p._id} style={{ marginBottom: '0.5rem' }}>
+                {new Date(p.data).toLocaleDateString('pt-BR')} — R$ {p.valor.toFixed(2)} — {p.status}
+                <br />
+                <Botao onClick={() => alterarStatus(p._id, p.status)}>
+                  {p.status === 'Pago' ? 'Marcar como Pendente' : 'Marcar como Pago'}
+                </Botao>{' '}
+                <Botao tipo="perigo" onClick={() => remover(p._id)}>Remover</Botao>
+              </li>
+            ))}
         </ul>
       </Cartao>
     </div>
