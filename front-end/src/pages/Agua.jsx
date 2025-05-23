@@ -3,7 +3,7 @@ import axios from 'axios';
 import Cartao from '../components/Cartao';
 import Botao from '../components/Botao';
 
-const API = 'https://meu-assistente.onrender.com/api';
+const API = 'https://meu-assistente.onrender.com/api/agua';
 const META_DIARIA = 4000; // ml
 
 function Agua() {

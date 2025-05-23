@@ -3,7 +3,7 @@ import Cartao from '../components/Cartao';
 import Botao from '../components/Botao';
 import axios from 'axios';
 
-const API = 'https://meu-assistente.onrender.com/api';
+const API = 'https://meu-assistente.onrender.com/api/compras';
 
 function Compras() {
   const [itens, setItens] = useState([]);
