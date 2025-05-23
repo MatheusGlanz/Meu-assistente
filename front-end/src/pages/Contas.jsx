@@ -3,7 +3,7 @@ import Cartao from '../components/Cartao';
 import Botao from '../components/Botao';
 import axios from 'axios';
 
-const API = 'http://localhost:5000/api/contas';
+const API = 'https://meu-assistente.onrender.com/api';
 
 function Contas() {
   const [contas, setContas] = useState([]);

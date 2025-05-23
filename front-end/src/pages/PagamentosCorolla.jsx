@@ -3,7 +3,7 @@ import axios from 'axios';
 import Cartao from '../components/Cartao';
 import Botao from '../components/Botao';
 
-const API = 'http://localhost:5000/api/pagamentoscorolla';
+const API = 'https://meu-assistente.onrender.com/api';
 
 function PagamentosCorolla() {
   const [pagamentos, setPagamentos] = useState([]);
