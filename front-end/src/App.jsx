@@ -6,16 +6,27 @@ import Compras from './pages/Compras';
 import Contas from './pages/Contas';
 import Medicamentos from './pages/Medicamentos';  
 import PagamentosCorolla from './pages/PagamentosCorolla';
-
-
+import { useEffect, useState } from 'react';
 
 function App() {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
     <Router>
       <div style={estilos.app}>
         <header style={estilos.header}>
           <h1>Assistente Pessoal</h1>
-          <nav style={estilos.nav}>
+          <nav style={{
+            ...estilos.nav,
+            flexDirection: isMobile ? 'column' : 'row',
+            alignItems: isMobile ? 'flex-start' : 'center',
+          }}>
             <Link to="/" style={estilos.link}>Ingestão de Água</Link>
             <Link to="/agenda" style={estilos.link}>Agenda</Link>
             <Link to="/tarefas" style={estilos.link}>Tarefas</Link>
@@ -23,8 +34,6 @@ function App() {
             <Link to="/contas" style={estilos.link}>Contas</Link>
             <Link to="/medicamentos" style={estilos.link}>Medicamentos</Link>
             <Link to="/pagamentosCorolla" style={estilos.link}>Pagamentos Corolla</Link>
-
-
           </nav>
         </header>
 
@@ -59,7 +68,8 @@ const estilos = {
   nav: {
     marginTop: '0.5rem',
     display: 'flex',
-    gap: '1rem',
+    flexWrap: 'wrap',
+    gap: '0.5rem',
   },
   link: {
     color: '#00bcd4',
