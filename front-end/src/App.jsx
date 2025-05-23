@@ -28,17 +28,34 @@ function App() {
           </nav>
         </header>
 
-        <main style={estilos.main}>
-          <Routes>
-            <Route path="/" element={<Agua />} />
-            <Route path="/agenda" element={<Agenda />} />
-            <Route path="/tarefas" element={<Tarefas />} />
-            <Route path="/compras" element={<Compras />} />
-            <Route path="/contas" element={<Contas />} />
-            <Route path="/medicamentos" element={<Medicamentos />} />
-            <Route path="/pagamentosCorolla" element={<PagamentosCorolla />} />
-          </Routes>
-        </main>
+         {/* CSS global para responsividade */}
+        <style>{`
+          @media (max-width: 600px) {
+            nav {
+              flex-direction: column !important;
+              gap: 0.5rem !important;
+            }
+            nav a {
+              font-size: 1.1rem !important;
+              padding: 0.5rem;
+              display: block;
+              border-radius: 6px;
+              background-color: #333;
+            }
+            nav a:hover {
+              background-color: #00bcd4;
+              color: #121212 !important;
+            }
+            main {
+              padding: 1rem !important;
+              max-width: 100% !important;
+            }
+            header h1 {
+              font-size: 1.5rem;
+              margin: 0;
+            }
+          }
+        `}</style>
       </div>
     </Router>
   );
