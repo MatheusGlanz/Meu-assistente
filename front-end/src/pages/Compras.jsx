@@ -12,7 +12,15 @@ function Compras() {
   const [quantidade, setQuantidade] = useState('');
   const [categoriaFiltro, setCategoriaFiltro] = useState('');
 
-  const opcoesCategorias = ['Hortifruti', 'Alimento', 'Fruta', 'Carne', 'Guloseimas', 'Princesa'];
+  const opcoesCategorias = [
+    'Hortifruti',
+    'Alimento',
+    'Fruta',
+    'Carne',
+    'Guloseimas',
+    'Princesa',
+    'Limpeza' // Categoria adicionada
+  ];
 
   useEffect(() => {
     axios.get(API)
@@ -116,19 +124,22 @@ function Compras() {
       </Cartao>
 
       <Cartao>
-        <label style={{ marginBottom: '0.5rem' }}>
-          Filtrar por categoria:{' '}
-          <select
-            value={categoriaFiltro}
-            onChange={e => setCategoriaFiltro(e.target.value)}
-            style={estilos.input}
-          >
-            <option value="">Todas</option>
-            {opcoesCategorias.map((cat, index) => (
-              <option key={index} value={cat}>{cat}</option>
-            ))}
-          </select>
-        </label>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <label>
+            Filtrar por categoria:{' '}
+            <select
+              value={categoriaFiltro}
+              onChange={e => setCategoriaFiltro(e.target.value)}
+              style={estilos.input}
+            >
+              <option value="">Todas</option>
+              {opcoesCategorias.map((cat, index) => (
+                <option key={index} value={cat}>{cat}</option>
+              ))}
+            </select>
+          </label>
+          <Botao onClick={() => setCategoriaFiltro('')}>Limpar Filtro</Botao>
+        </div>
       </Cartao>
 
       <Cartao>
