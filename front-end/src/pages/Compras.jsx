@@ -9,7 +9,8 @@ function Compras() {
   const [itens, setItens] = useState([]);
   const [nome, setNome] = useState('');
   const [categoria, setCategoria] = useState('');
-  const [quantidade, setQuantidade] = useState(1);
+  const [quantidade, setQuantidade] = useState('');
+  const [categoriaFiltro, setCategoriaFiltro] = useState(''); // novo estado para filtro
 
   useEffect(() => {
     axios.get(API)
@@ -18,19 +19,22 @@ function Compras() {
   }, []);
 
   const adicionar = async () => {
+    const qtd = Number(quantidade);
+
     if (!nome.trim()) {
       alert('Por favor, preencha o nome do item.');
       return;
     }
-    if (quantidade <= 0) {
-      alert('Quantidade deve ser maior que zero.');
+
+    if (isNaN(qtd) || qtd <= 0) {
+      alert('Quantidade deve ser um número maior que zero.');
       return;
     }
 
     const novo = {
       nome: nome.trim(),
       categoria: categoria.trim() || 'Sem categoria',
-      quantidade,
+      quantidade: qtd,
       comprado: false,
     };
 
@@ -39,7 +43,7 @@ function Compras() {
       setItens([res.data, ...itens]);
       setNome('');
       setCategoria('');
-      setQuantidade(1);
+      setQuantidade('');
     } catch (err) {
       console.error('Erro ao adicionar item:', err.response?.data || err.message);
       alert('Erro ao adicionar item.');
@@ -66,7 +70,13 @@ function Compras() {
     }
   };
 
-  const categorias = [...new Set(itens.map(i => i.categoria))];
+  // Categorias únicas dos itens
+  const categoriasUnicas = [...new Set(itens.map(i => i.categoria || 'Sem categoria'))];
+
+  // Filtra os itens com base na categoria selecionada
+  const itensFiltrados = categoriaFiltro
+    ? itens.filter(i => i.categoria === categoriaFiltro)
+    : itens;
 
   return (
     <div>
@@ -83,15 +93,14 @@ function Compras() {
           />
           <input
             type="number"
-            min="1"
             placeholder="Quantidade"
             value={quantidade}
-            onChange={e => setQuantidade(Number(e.target.value) || 1)}
+            onChange={e => setQuantidade(e.target.value)}
             style={estilos.input}
           />
           <input
             type="text"
-            placeholder="Categoria (ex: Limpeza, Alimentos)"
+            placeholder="Categoria (opcional)"
             value={categoria}
             onChange={e => setCategoria(e.target.value)}
             style={estilos.input}
@@ -100,28 +109,41 @@ function Compras() {
         </div>
       </Cartao>
 
-      {categorias.map(cat => (
-        <Cartao key={cat}>
-          <h3>{cat}</h3>
-          <ul style={{ paddingLeft: '1rem' }}>
-            {itens.filter(i => i.categoria === cat).map(i => (
-              <li key={i._id} style={{ marginBottom: '0.5rem' }}>
-                <span style={{
-                  textDecoration: i.comprado ? 'line-through' : 'none',
-                  opacity: i.comprado ? 0.6 : 1,
-                }}>
-                  {i.nome} — {i.quantidade} un.
-                </span>
-                <br />
-                <Botao onClick={() => alternarCompra(i._id, i.comprado)}>
-                  {i.comprado ? 'Desmarcar' : 'Comprado'}
-                </Botao>{' '}
-                <Botao tipo="perigo" onClick={() => remover(i._id)}>Remover</Botao>
-              </li>
+      <Cartao>
+        <label style={{ marginBottom: '0.5rem' }}>
+          Filtrar por categoria:{' '}
+          <select
+            value={categoriaFiltro}
+            onChange={e => setCategoriaFiltro(e.target.value)}
+            style={estilos.input}
+          >
+            <option value="">Todas</option>
+            {categoriasUnicas.map((cat, index) => (
+              <option key={index} value={cat}>{cat}</option>
             ))}
-          </ul>
-        </Cartao>
-      ))}
+          </select>
+        </label>
+      </Cartao>
+
+      <Cartao>
+        <ul style={{ paddingLeft: '1rem' }}>
+          {itensFiltrados.map(i => (
+            <li key={i._id} style={{ marginBottom: '0.5rem' }}>
+              <span style={{
+                textDecoration: i.comprado ? 'line-through' : 'none',
+                opacity: i.comprado ? 0.6 : 1,
+              }}>
+                {i.nome} — {i.quantidade} un. {i.categoria && `(${i.categoria})`}
+              </span>
+              <br />
+              <Botao onClick={() => alternarCompra(i._id, i.comprado)}>
+                {i.comprado ? 'Desmarcar' : 'Comprado'}
+              </Botao>{' '}
+              <Botao tipo="perigo" onClick={() => remover(i._id)}>Remover</Botao>
+            </li>
+          ))}
+        </ul>
+      </Cartao>
     </div>
   );
 }
