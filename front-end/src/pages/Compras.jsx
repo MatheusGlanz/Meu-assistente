@@ -10,7 +10,9 @@ function Compras() {
   const [nome, setNome] = useState('');
   const [categoria, setCategoria] = useState('');
   const [quantidade, setQuantidade] = useState('');
-  const [categoriaFiltro, setCategoriaFiltro] = useState(''); // novo estado para filtro
+  const [categoriaFiltro, setCategoriaFiltro] = useState('');
+
+  const opcoesCategorias = ['Hortifruti', 'Alimento', 'Fruta', 'Carne', 'Guloseimas', 'Princesa'];
 
   useEffect(() => {
     axios.get(API)
@@ -26,6 +28,11 @@ function Compras() {
       return;
     }
 
+    if (!categoria.trim()) {
+      alert('Por favor, selecione uma categoria.');
+      return;
+    }
+
     if (isNaN(qtd) || qtd <= 0) {
       alert('Quantidade deve ser um número maior que zero.');
       return;
@@ -33,7 +40,7 @@ function Compras() {
 
     const novo = {
       nome: nome.trim(),
-      categoria: categoria.trim() || 'Sem categoria',
+      categoria: categoria,
       quantidade: qtd,
       comprado: false,
     };
@@ -70,10 +77,6 @@ function Compras() {
     }
   };
 
-  // Categorias únicas dos itens
-  const categoriasUnicas = [...new Set(itens.map(i => i.categoria || 'Sem categoria'))];
-
-  // Filtra os itens com base na categoria selecionada
   const itensFiltrados = categoriaFiltro
     ? itens.filter(i => i.categoria === categoriaFiltro)
     : itens;
@@ -98,13 +101,16 @@ function Compras() {
             onChange={e => setQuantidade(e.target.value)}
             style={estilos.input}
           />
-          <input
-            type="text"
-            placeholder="Categoria (opcional)"
+          <select
             value={categoria}
             onChange={e => setCategoria(e.target.value)}
             style={estilos.input}
-          />
+          >
+            <option value="">Selecione a categoria</option>
+            {opcoesCategorias.map((cat, idx) => (
+              <option key={idx} value={cat}>{cat}</option>
+            ))}
+          </select>
           <Botao onClick={adicionar}>Adicionar Item</Botao>
         </div>
       </Cartao>
@@ -118,7 +124,7 @@ function Compras() {
             style={estilos.input}
           >
             <option value="">Todas</option>
-            {categoriasUnicas.map((cat, index) => (
+            {opcoesCategorias.map((cat, index) => (
               <option key={index} value={cat}>{cat}</option>
             ))}
           </select>
