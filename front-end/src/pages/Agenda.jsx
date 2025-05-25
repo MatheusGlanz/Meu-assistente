@@ -10,11 +10,29 @@ const MESES = [
   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
 ];
 
+// Função que retorna a data atual no horário de Brasília (YYYY-MM-DD)
+const getHojeBrasilia = () => {
+  const agora = new Date();
+  const utc = agora.getTime() + (agora.getTimezoneOffset() * 60000);
+  const brasilia = new Date(utc - 3 * 3600000);
+  return brasilia.toISOString().split('T')[0];
+};
+
+// Função que retorna a hora atual no horário de Brasília (HH:mm)
+const getHoraBrasilia = () => {
+  const agora = new Date();
+  const utc = agora.getTime() + (agora.getTimezoneOffset() * 60000);
+  const brasilia = new Date(utc - 3 * 3600000);
+  const h = brasilia.getHours().toString().padStart(2, '0');
+  const m = brasilia.getMinutes().toString().padStart(2, '0');
+  return `${h}:${m}`;
+};
+
 function Agenda() {
   const [compromissos, setCompromissos] = useState([]);
   const [nome, setNome] = useState('');
-  const [data, setData] = useState('');
-  const [hora, setHora] = useState('');
+  const [data, setData] = useState(getHojeBrasilia());
+  const [hora, setHora] = useState(getHoraBrasilia());
   const [observacao, setObservacao] = useState('');
   const [mesSelecionado, setMesSelecionado] = useState(new Date().getMonth() + 1); // 1 a 12
 
@@ -36,8 +54,8 @@ function Agenda() {
       const res = await axios.post(API, novo);
       setCompromissos([res.data, ...compromissos]);
       setNome('');
-      setData('');
-      setHora('');
+      setData(getHojeBrasilia());
+      setHora(getHoraBrasilia());
       setObservacao('');
     } catch (err) {
       alert('Erro ao adicionar compromisso');
@@ -64,12 +82,29 @@ function Agenda() {
     }
   };
 
+  // Filtra compromissos pelo mês selecionado e ordena pela data e hora, considerando o horário de Brasília
+  const compromissosFiltrados = compromissos
+    .filter(c => {
+      // Pega o mês no horário de Brasília
+      const utc = new Date(c.data).getTime() + (new Date(c.data).getTimezoneOffset() * 60000);
+      const brasiliaDate = new Date(utc - 3 * 3600000);
+      return brasiliaDate.getMonth() + 1 === mesSelecionado;
+    })
+    .sort((a, b) => {
+      // Usa data e hora concatenados para ordenar, já no fuso correto
+      const dataHoraA = new Date(`${a.data}T${a.hora}`);
+      const dataHoraB = new Date(`${b.data}T${b.hora}`);
+      return dataHoraA - dataHoraB;
+    });
+
   return (
-    <div>
-      {/* CSS embutido para os inputs de data e hora */}
+    <div style={estilos.container}>
+      {/* Estilo dark para inputs e select */}
       <style>{`
         input[type="date"],
-        input[type="time"] {
+        input[type="time"],
+        input[type="text"],
+        select {
           color: #fff;
           background-color: #1e1e1e;
           border: 1px solid #333;
@@ -82,17 +117,8 @@ function Agenda() {
           filter: invert(1);
           cursor: pointer;
         }
-        input[type="date"]::-moz-calendar-picker-indicator,
-        input[type="time"]::-moz-calendar-picker-indicator {
-          filter: invert(1);
-          cursor: pointer;
-        }
         select {
-          padding: 0.5rem;
-          border-radius: 8px;
-          border: 1px solid #333;
-          background-color: #1e1e1e;
-          color: #fff;
+          cursor: pointer;
         }
       `}</style>
 
@@ -131,10 +157,11 @@ function Agenda() {
       </Cartao>
 
       <div style={{ margin: '1rem 0' }}>
-        <label style={{ marginRight: '0.5rem' }}>Mês: </label>
+        <label style={{ marginRight: '0.5rem', color: '#fff' }}>Mês: </label>
         <select
           value={mesSelecionado}
           onChange={e => setMesSelecionado(Number(e.target.value))}
+          aria-label="Selecionar mês"
         >
           {MESES.map((mes, index) => (
             <option key={index + 1} value={index + 1}>{mes}</option>
@@ -142,29 +169,38 @@ function Agenda() {
         </select>
       </div>
 
-      {compromissos
-        .filter(c => new Date(c.data).getMonth() + 1 === mesSelecionado)
-        .sort((a, b) => new Date(a.data) - new Date(b.data))
-        .map(c => (
-          <Cartao key={c._id}>
-            <strong>{c.nome}</strong> — {new Date(c.data).toLocaleDateString('pt-BR')} às {c.hora}<br />
-            <small>{c.observacao}</small><br />
-            <span style={{ color: c.status === 'executado' ? 'lightgreen' : 'orange' }}>
-              {c.status}
-            </span>
-            <div style={{ marginTop: '0.5rem' }}>
-              <Botao onClick={() => alternarStatus(c._id, c.status)}>
-                {c.status === 'executado' ? 'Marcar como pendente' : 'Marcar como executado'}
-              </Botao>{' '}
-              <Botao tipo="perigo" onClick={() => remover(c._id)}>Remover</Botao>
-            </div>
-          </Cartao>
-        ))}
+      {compromissosFiltrados.length === 0 && (
+        <p style={{ color: '#aaa' }}>Nenhum compromisso para este mês.</p>
+      )}
+
+      {compromissosFiltrados.map(c => (
+        <Cartao key={c._id}>
+          <strong>{c.nome}</strong> — {new Date(c.data).toLocaleDateString('pt-BR')} às {c.hora}<br />
+          {c.observacao && <small>{c.observacao}</small>}<br />
+          <span style={{ color: c.status === 'executado' ? 'lightgreen' : 'orange', fontWeight: 'bold' }}>
+            {c.status}
+          </span>
+          <div style={{ marginTop: '0.5rem' }}>
+            <Botao onClick={() => alternarStatus(c._id, c.status)}>
+              {c.status === 'executado' ? 'Marcar como pendente' : 'Marcar como executado'}
+            </Botao>{' '}
+            <Botao tipo="perigo" onClick={() => remover(c._id)}>Remover</Botao>
+          </div>
+        </Cartao>
+      ))}
     </div>
   );
 }
 
 const estilos = {
+  container: {
+    maxWidth: '600px',
+    margin: 'auto',
+    padding: '1rem',
+    backgroundColor: '#121212',
+    minHeight: '100vh',
+    color: '#fff',
+  },
   formulario: {
     display: 'flex',
     flexDirection: 'column',

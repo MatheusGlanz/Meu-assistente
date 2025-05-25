@@ -2,14 +2,33 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import Cartao from '../components/Cartao';
 import Botao from '../components/Botao';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
 const API = 'https://meu-assistente.onrender.com/api/agua';
-const META_DIARIA = 4000; // ml
+const META_DIARIA = 4000;
+
+// Função que retorna a data atual no horário de Brasília no formato YYYY-MM-DD
+const getHoje = () => {
+  const agora = new Date();
+  const utc = agora.getTime() + (agora.getTimezoneOffset() * 60000);
+  const brasilia = new Date(utc - 3 * 3600000);
+  return brasilia.toISOString().split('T')[0];
+};
+
+// Função que retorna a hora atual no horário de Brasília no formato HH:mm
+const getHoraBrasilia = () => {
+  const agora = new Date();
+  const utc = agora.getTime() + (agora.getTimezoneOffset() * 60000);
+  const brasilia = new Date(utc - 3 * 3600000);
+  const h = brasilia.getHours().toString().padStart(2, '0');
+  const m = brasilia.getMinutes().toString().padStart(2, '0');
+  return `${h}:${m}`;
+};
 
 function Agua() {
   const [registros, setRegistros] = useState([]);
   const [quantidade, setQuantidade] = useState('');
-  const [horario, setHorario] = useState('');
+  const [horario, setHorario] = useState(getHoraBrasilia());
   const [data, setData] = useState(getHoje());
   const [filtroData, setFiltroData] = useState(getHoje());
 
@@ -31,7 +50,7 @@ function Agua() {
       const res = await axios.post(API, novo);
       setRegistros([res.data, ...registros]);
       setQuantidade('');
-      setHorario('');
+      setHorario(getHoraBrasilia());
       setData(getHoje());
     } catch (err) {
       console.error('Erro ao adicionar registro:', err.response?.data || err.message);
@@ -49,14 +68,22 @@ function Agua() {
     }
   };
 
-  // Filtro e cálculo
-  const registrosDoDia = registros.filter(r => r.data === filtroData);
+  // Filtra registros do dia selecionado e ordena por horário
+  const registrosDoDia = registros
+    .filter(r => r.data === filtroData)
+    .sort((a, b) => a.horario.localeCompare(b.horario));
+
   const totalDia = registrosDoDia.reduce((soma, r) => soma + r.quantidade, 0);
   const percentual = Math.min((totalDia / META_DIARIA) * 100, 100);
 
+  // Dados para gráfico
+  const dadosGrafico = registrosDoDia.map(r => ({
+    horario: r.horario.slice(0, 5),
+    quantidade: r.quantidade,
+  }));
+
   return (
     <div>
-      {/* CSS embutido para inputs de data e hora com seletor branco */}
       <style>{`
         input[type="date"],
         input[type="time"] {
@@ -72,11 +99,6 @@ function Agua() {
           filter: invert(1);
           cursor: pointer;
         }
-        input[type="date"]::-moz-calendar-picker-indicator,
-        input[type="time"]::-moz-calendar-picker-indicator {
-          filter: invert(1);
-          cursor: pointer;
-        }
       `}</style>
 
       <h2>Ingestão de Água</h2>
@@ -89,6 +111,7 @@ function Agua() {
             value={quantidade}
             onChange={e => setQuantidade(e.target.value)}
             style={estilos.input}
+            min="1"
           />
           <input
             type="time"
@@ -117,7 +140,7 @@ function Agua() {
           />
         </div>
         <div style={{ marginBottom: '0.5rem' }}>
-          <strong>Total ingerido:</strong> {totalDia} ml / 4000 ml
+          <strong>Total ingerido:</strong> {totalDia} ml / {META_DIARIA} ml
         </div>
         <div style={estilos.barraContainer}>
           <div style={{ ...estilos.barraInterna, width: `${percentual}%` }}>
@@ -125,6 +148,20 @@ function Agua() {
           </div>
         </div>
       </Cartao>
+
+      {registrosDoDia.length > 0 && (
+        <Cartao>
+          <h4>Gráfico por horário</h4>
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart data={dadosGrafico}>
+              <XAxis dataKey="horario" stroke="#fff" />
+              <YAxis stroke="#fff" />
+              <Tooltip />
+              <Bar dataKey="quantidade" fill="#4fc3f7" />
+            </BarChart>
+          </ResponsiveContainer>
+        </Cartao>
+      )}
 
       {registrosDoDia.map(r => (
         <Cartao key={r._id}>
@@ -135,8 +172,6 @@ function Agua() {
     </div>
   );
 }
-
-const getHoje = () => new Date().toISOString().split('T')[0];
 
 const estilos = {
   formulario: {

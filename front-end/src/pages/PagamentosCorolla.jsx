@@ -3,6 +3,10 @@ import axios from 'axios';
 import Cartao from '../components/Cartao';
 import Botao from '../components/Botao';
 
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+} from 'recharts';
+
 const API = 'https://meu-assistente.onrender.com/api/pagamentoscorolla';
 
 function PagamentosCorolla() {
@@ -17,7 +21,7 @@ function PagamentosCorolla() {
   const carregarPagamentos = async () => {
     try {
       const res = await axios.get(`${API}?ano=${anoSelecionado}`);
-      setPagamentos(res.data);
+      setPagamentos(res.data || []);
     } catch (err) {
       console.error('Erro ao buscar pagamentos:', err);
     }
@@ -70,7 +74,30 @@ function PagamentosCorolla() {
     }
   };
 
-  const total = pagamentos.reduce((soma, p) => soma + p.valor, 0);
+  const total = pagamentos.reduce((soma, p) => soma + (p.valor || 0), 0);
+  const parcelasPagas = pagamentos.filter(p => p.status === 'Pago').length;
+  const totalParcelas = pagamentos.length;
+
+  // Dados para o gráfico (total pago e pendente)
+  const totalPago = pagamentos
+    .filter(p => p.status === 'Pago')
+    .reduce((soma, p) => soma + (p.valor || 0), 0);
+
+  const totalPendente = pagamentos
+    .filter(p => p.status !== 'Pago')
+    .reduce((soma, p) => soma + (p.valor || 0), 0);
+
+  const dadosGrafico = [
+    { nome: 'Pago', valor: totalPago },
+    { nome: 'Pendente', valor: totalPendente },
+  ];
+
+  // Formatador de data no fuso horário de Brasília
+  const formatarDataBrasilia = (dataStr) => {
+    return new Date(dataStr).toLocaleDateString('pt-BR', {
+      timeZone: 'America/Sao_Paulo',
+    });
+  };
 
   return (
     <div>
@@ -91,7 +118,6 @@ function PagamentosCorolla() {
             onChange={e => setData(e.target.value)}
             style={estilos.input}
           />
-
           <Botao onClick={adicionarPagamento}>Adicionar Pagamento</Botao>
         </div>
       </Cartao>
@@ -105,14 +131,34 @@ function PagamentosCorolla() {
             ))}
           </select>
         </div>
+
         <h3>Total: R$ {total.toFixed(2)}</h3>
+        <p>Parcelas pagas: {parcelasPagas} de {totalParcelas}</p>
+
+        {/* Gráfico */}
+        <div style={{ width: '100%', height: 300 }}>
+          <ResponsiveContainer>
+            <BarChart
+              data={dadosGrafico}
+              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="nome" />
+              <YAxis />
+              <Tooltip formatter={(value) => `R$ ${value.toFixed(2)}`} />
+              <Legend />
+              <Bar dataKey="valor" fill="#8884d8" barSize={40} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
         <ul style={{ paddingLeft: '1rem' }}>
           {pagamentos
             .slice()
             .sort((a, b) => new Date(a.data) - new Date(b.data))
             .map(p => (
               <li key={p._id} style={{ marginBottom: '0.5rem' }}>
-                {new Date(p.data).toLocaleDateString('pt-BR')} — R$ {p.valor.toFixed(2)} — {p.status}
+                {formatarDataBrasilia(p.data)} — R$ {p.valor.toFixed(2)} — {p.status}
                 <br />
                 <Botao onClick={() => alterarStatus(p._id, p.status)}>
                   {p.status === 'Pago' ? 'Marcar como Pendente' : 'Marcar como Pago'}

@@ -8,6 +8,10 @@ import Medicamentos from './pages/Medicamentos';
 import PagamentosCorolla from './pages/PagamentosCorolla';
 import { useEffect, useState } from 'react';
 
+
+
+
+
 function App() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 

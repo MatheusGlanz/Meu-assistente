@@ -3,6 +3,10 @@ import Cartao from '../components/Cartao';
 import Botao from '../components/Botao';
 import axios from 'axios';
 
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
+} from 'recharts';
+
 const API = 'https://meu-assistente.onrender.com/api/contas';
 
 function Contas() {
@@ -67,6 +71,7 @@ function Contas() {
     }
   };
 
+  // Filtra contas por mês e ano (se selecionado)
   const contasFiltradas = contas.filter(c => {
     const data = new Date(c.vencimento);
     const mes = data.getMonth() + 1;
@@ -76,15 +81,31 @@ function Contas() {
            (!filtroAno || ano === Number(filtroAno));
   });
 
-  const total = contasFiltradas.reduce((soma, c) => soma + c.valor, 0);
+  // Agrupa e soma as contas por mês/ano (para o gráfico)
+  const dadosGrafico = contasFiltradas.reduce((acc, c) => {
+    const data = new Date(c.vencimento);
+    const mesAno = `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}`;
 
-  const categorias = [...new Set(contasFiltradas.map(c => c.categoria))];
+    const idx = acc.findIndex(item => item.mes === mesAno);
+    if (idx >= 0) {
+      acc[idx].total += c.valor;
+    } else {
+      acc.push({ mes: mesAno, total: c.valor });
+    }
+    return acc;
+  }, []);
+
+  // Ordena os dados do gráfico pela data
+  dadosGrafico.sort((a, b) => a.mes.localeCompare(b.mes));
+
+  // Soma total geral das contas filtradas
+  const totalGeral = contasFiltradas.reduce((s, c) => s + c.valor, 0);
 
   return (
     <div>
       {/* CSS embutido para inputs number com estilo dark e ícones invertidos */}
       <style>{`
-        input[type="number"] {
+        input[type="number"], input[type="text"], input[type="date"] {
           color: #fff;
           background-color: #1e1e1e;
           border: 1px solid #333;
@@ -175,10 +196,44 @@ function Contas() {
       </Cartao>
 
       <Cartao>
-        <h3>Total das contas: R$ {total.toFixed(2)}</h3>
+        <h3>Total Geral: R$ {totalGeral.toFixed(2)}</h3>
+
+        {/* Gráfico de barras: soma total por mês */}
+        <div style={{ width: '100%', height: 350 }}>
+          <ResponsiveContainer>
+            <BarChart
+              data={dadosGrafico}
+              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+              barSize={40}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+              <XAxis dataKey="mes" stroke="#ccc" 
+                tickFormatter={(tick) => {
+                  const [ano, mes] = tick.split('-');
+                  const meses = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+                  return `${meses[Number(mes) - 1]}/${ano}`;
+                }}
+              />
+              <YAxis stroke="#ccc" />
+              <Tooltip
+                formatter={(value) => `R$ ${value.toFixed(2)}`}
+                labelFormatter={(label) => {
+                  const [ano, mes] = label.split('-');
+                  const meses = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+                  return `${meses[Number(mes) - 1]}/${ano}`;
+                }}
+                contentStyle={{ backgroundColor: '#222', borderRadius: '8px', border: 'none' }}
+                labelStyle={{ color: '#ddd' }}
+              />
+              <Legend wrapperStyle={{ color: '#ddd' }} />
+              <Bar dataKey="total" fill="#8884d8" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </Cartao>
 
-      {categorias.map(cat => (
+      {/* Lista das contas agrupadas por categoria */}
+      {Array.from(new Set(contasFiltradas.map(c => c.categoria))).map(cat => (
         <Cartao key={cat}>
           <h3>{cat}</h3>
           <ul style={{ paddingLeft: '1rem' }}>
