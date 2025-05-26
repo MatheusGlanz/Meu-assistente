@@ -10,21 +10,20 @@ const MESES = [
   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
 ];
 
-// Função que retorna a data atual no horário de Brasília (YYYY-MM-DD)
+// Retorna data local em formato YYYY-MM-DD (sem UTC)
 const getHojeBrasilia = () => {
-  const agora = new Date();
-  const utc = agora.getTime() + (agora.getTimezoneOffset() * 60000);
-  const brasilia = new Date(utc - 3 * 3600000);
-  return brasilia.toISOString().split('T')[0];
+  const hoje = new Date();
+  const ano = hoje.getFullYear();
+  const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+  const dia = String(hoje.getDate()).padStart(2, '0');
+  return `${ano}-${mes}-${dia}`;
 };
 
-// Função que retorna a hora atual no horário de Brasília (HH:mm)
+// Hora local (HH:mm)
 const getHoraBrasilia = () => {
   const agora = new Date();
-  const utc = agora.getTime() + (agora.getTimezoneOffset() * 60000);
-  const brasilia = new Date(utc - 3 * 3600000);
-  const h = brasilia.getHours().toString().padStart(2, '0');
-  const m = brasilia.getMinutes().toString().padStart(2, '0');
+  const h = String(agora.getHours()).padStart(2, '0');
+  const m = String(agora.getMinutes()).padStart(2, '0');
   return `${h}:${m}`;
 };
 
@@ -82,16 +81,12 @@ function Agenda() {
     }
   };
 
-  // Filtra compromissos pelo mês selecionado e ordena pela data e hora, considerando o horário de Brasília
   const compromissosFiltrados = compromissos
     .filter(c => {
-      // Pega o mês no horário de Brasília
-      const utc = new Date(c.data).getTime() + (new Date(c.data).getTimezoneOffset() * 60000);
-      const brasiliaDate = new Date(utc - 3 * 3600000);
-      return brasiliaDate.getMonth() + 1 === mesSelecionado;
+      const [ano, mes, dia] = c.data.split('-');
+      return parseInt(mes) === mesSelecionado;
     })
     .sort((a, b) => {
-      // Usa data e hora concatenados para ordenar, já no fuso correto
       const dataHoraA = new Date(`${a.data}T${a.hora}`);
       const dataHoraB = new Date(`${b.data}T${b.hora}`);
       return dataHoraA - dataHoraB;
@@ -99,7 +94,6 @@ function Agenda() {
 
   return (
     <div style={estilos.container}>
-      {/* Estilo dark para inputs e select */}
       <style>{`
         input[type="date"],
         input[type="time"],
@@ -175,7 +169,7 @@ function Agenda() {
 
       {compromissosFiltrados.map(c => (
         <Cartao key={c._id}>
-          <strong>{c.nome}</strong> — {new Date(c.data).toLocaleDateString('pt-BR')} às {c.hora}<br />
+          <strong>{c.nome}</strong> — {new Date(`${c.data}T00:00:00`).toLocaleDateString('pt-BR')} às {c.hora}<br />
           {c.observacao && <small>{c.observacao}</small>}<br />
           <span style={{ color: c.status === 'executado' ? 'lightgreen' : 'orange', fontWeight: 'bold' }}>
             {c.status}
