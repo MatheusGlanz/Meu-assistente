@@ -11,6 +11,7 @@ function Compras() {
   const [categoria, setCategoria] = useState('');
   const [quantidade, setQuantidade] = useState('');
   const [categoriaFiltro, setCategoriaFiltro] = useState('');
+  const [editandoId, setEditandoId] = useState(null);
 
   const opcoesCategorias = [
     'Hortifruti',
@@ -19,7 +20,7 @@ function Compras() {
     'Carne',
     'Guloseimas',
     'Princesa',
-    'Limpeza' // Categoria adicionada
+    'Limpeza'
   ];
 
   useEffect(() => {
@@ -48,21 +49,37 @@ function Compras() {
 
     const novo = {
       nome: nome.trim(),
-      categoria: categoria,
+      categoria,
       quantidade: qtd,
-      comprado: false,
     };
 
     try {
-      const res = await axios.post(API, novo);
-      setItens([res.data, ...itens]);
+      if (editandoId) {
+        // Atualizar item existente
+        const res = await axios.put(`${API}/${editandoId}`, novo);
+        setItens(itens.map(i => i._id === editandoId ? res.data : i));
+        setEditandoId(null);
+      } else {
+        // Adicionar novo item
+        const res = await axios.post(API, { ...novo, comprado: false });
+        setItens([res.data, ...itens]);
+      }
+
+      // Limpar formulário
       setNome('');
       setCategoria('');
       setQuantidade('');
     } catch (err) {
-      console.error('Erro ao adicionar item:', err.response?.data || err.message);
-      alert('Erro ao adicionar item.');
+      console.error('Erro ao salvar item:', err.response?.data || err.message);
+      alert('Erro ao salvar item.');
     }
+  };
+
+  const editar = (item) => {
+    setEditandoId(item._id);
+    setNome(item.nome);
+    setCategoria(item.categoria);
+    setQuantidade(item.quantidade.toString());
   };
 
   const alternarCompra = async (id, compradoAtual) => {
@@ -79,6 +96,12 @@ function Compras() {
     try {
       await axios.delete(`${API}/${id}`);
       setItens(itens.filter(i => i._id !== id));
+      if (editandoId === id) {
+        setEditandoId(null);
+        setNome('');
+        setCategoria('');
+        setQuantidade('');
+      }
     } catch (err) {
       console.error('Erro ao remover item:', err.response?.data || err.message);
       alert('Erro ao remover item.');
@@ -119,7 +142,9 @@ function Compras() {
               <option key={idx} value={cat}>{cat}</option>
             ))}
           </select>
-          <Botao onClick={adicionar}>Adicionar Item</Botao>
+          <Botao onClick={adicionar}>
+            {editandoId ? 'Salvar Alteração' : 'Adicionar Item'}
+          </Botao>
         </div>
       </Cartao>
 
@@ -156,6 +181,7 @@ function Compras() {
               <Botao onClick={() => alternarCompra(i._id, i.comprado)}>
                 {i.comprado ? 'Desmarcar' : 'Comprado'}
               </Botao>{' '}
+              <Botao onClick={() => editar(i)}>Editar</Botao>{' '}
               <Botao tipo="perigo" onClick={() => remover(i._id)}>Remover</Botao>
             </li>
           ))}
