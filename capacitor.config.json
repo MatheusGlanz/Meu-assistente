@@ -1,0 +1,6 @@
+{
+  "appId": "com.seuprojeto.app",
+  "appName": "Meu Assistente",
+  "webDir": "dist",
+  "bundledWebRuntime": false
+}
