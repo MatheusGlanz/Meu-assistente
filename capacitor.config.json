@@ -1,6 +1,0 @@
-{
-  "appId": "com.meu.assistente",
-  "appName": "Meu Assistente",
-  "webDir": "dist",
-  "bundledWebRuntime": false
-}
