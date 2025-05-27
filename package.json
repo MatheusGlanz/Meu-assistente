@@ -18,5 +18,12 @@
   "bugs": {
     "url": "https://github.com/MatheusGlanz/Meu-assistente/issues"
   },
-  "homepage": "https://github.com/MatheusGlanz/Meu-assistente#readme"
+  "homepage": "https://github.com/MatheusGlanz/Meu-assistente#readme",
+  "devDependencies": {
+    "@capacitor/cli": "^7.2.0",
+    "@capacitor/core": "^7.2.0"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.2.0"
+  }
 }
